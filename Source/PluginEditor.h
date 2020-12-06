@@ -27,7 +27,9 @@ public:
 private:
     juce::Label irNameLabel;
     juce::TextButton loadIrBtn;
+    
     juce::Slider volumeKnob;
+    juce::Label volumeLabel;
     
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volumeKnobAttachment;
     // This reference is provided as a quick way for your editor to

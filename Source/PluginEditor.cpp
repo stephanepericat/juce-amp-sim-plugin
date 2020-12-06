@@ -13,6 +13,7 @@
 AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    volumeKnob.setName("Volume");
     volumeKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     volumeKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
     addAndMakeVisible(volumeKnob);
@@ -30,6 +31,10 @@ AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
     irNameLabel.setText("No IR loaded...", juce::NotificationType::dontSendNotification);
     irNameLabel.setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(irNameLabel);
+    
+    volumeLabel.setText(volumeKnob.getName(), juce::NotificationType::dontSendNotification);
+    volumeLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(volumeLabel);
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -56,7 +61,12 @@ void AmpSimAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+    
+    // IR
     loadIrBtn.setBounds(10, 10, 150, 40);
     irNameLabel.setBounds(170, 10, 500, 40);
-    volumeKnob.setBounds(getWidth() - 150, 10, 140, 140);
+    
+    //Volume
+    volumeLabel.setBounds(getWidth() - 150, 10, 140, 40);
+    volumeKnob.setBounds(getWidth() - 150, 50, 140, 140);
 }
