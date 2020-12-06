@@ -22,6 +22,7 @@ AmpSimAudioProcessor::AmpSimAudioProcessor()
                        ), state(*this, nullptr, "parameters", createParams())
 #endif
 {
+    outputVolume.setGainLinear(DEFAULT_VOLUME);
 }
 
 AmpSimAudioProcessor::~AmpSimAudioProcessor()
@@ -101,6 +102,7 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     spec.sampleRate = sampleRate;
     
     cab.prepare(spec);
+    outputVolume.prepare(spec);
 }
 
 void AmpSimAudioProcessor::releaseResources()
@@ -153,8 +155,12 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     
     juce::dsp::AudioBlock<float> audioBlock = juce::dsp::AudioBlock<float>(buffer);
     
-    // IR
+    // Cab Impulse Response
     cab.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    // Output Volume
+    outputVolume.setGainLinear(vol);
+    outputVolume.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -162,16 +168,12 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-        for(int sample = 0; sample < buffer.getNumSamples(); ++sample)
-        {
-            channelData[sample] *= vol;
-        }
-    }
+//    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+//    {
+//        auto* channelData = buffer.getWritePointer (channel);
+//
+//        // ..do something to the data...
+//    }
 }
 
 //==============================================================================
@@ -210,7 +212,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", 0.f, 1.f, .5f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", 0.f, 1.f, DEFAULT_VOLUME));
     
     return { params.begin(), params.end() };
 }

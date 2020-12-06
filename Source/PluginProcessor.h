@@ -10,6 +10,8 @@
 
 #include <JuceHeader.h>
 
+#define DEFAULT_VOLUME .25f
+
 //==============================================================================
 /**
 */
@@ -61,6 +63,7 @@ public:
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
     juce::dsp::Convolution cab;
+    juce::dsp::Gain<float> outputVolume;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpSimAudioProcessor)
