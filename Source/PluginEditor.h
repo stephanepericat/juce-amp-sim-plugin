@@ -25,6 +25,8 @@ public:
     void resized() override;
 
 private:
+    juce::Label irNameLabel;
+    juce::TextButton loadIrBtn;
     juce::Slider volumeKnob;
     
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volumeKnobAttachment;

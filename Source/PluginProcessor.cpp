@@ -95,6 +95,12 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    juce::dsp::ProcessSpec spec = juce::dsp::ProcessSpec();
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+    spec.sampleRate = sampleRate;
+    
+    cab.prepare(spec);
 }
 
 void AmpSimAudioProcessor::releaseResources()
@@ -144,6 +150,11 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+    
+    juce::dsp::AudioBlock<float> audioBlock = juce::dsp::AudioBlock<float>(buffer);
+    
+    // IR
+    cab.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -202,4 +213,25 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", 0.f, 1.f, .5f));
     
     return { params.begin(), params.end() };
+}
+
+juce::String AmpSimAudioProcessor::loadImpulseResponse()
+{
+    juce::FileChooser chooser { "Please load an impulse response" };
+
+    if (chooser.browseForFileToOpen())
+    {
+        auto file = chooser.getResult();
+
+        cab.loadImpulseResponse(
+            file,
+            juce::dsp::Convolution::Stereo::no,
+            juce::dsp::Convolution::Trim::no,
+            file.getSize()
+        );
+        
+        currentIrName = file.getFileName();
+    }
+    
+    return currentIrName;
 }

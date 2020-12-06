@@ -55,8 +55,13 @@ public:
     
     //==============================================================================
     juce::AudioProcessorValueTreeState state;
+    juce::String currentIrName = "No IR loaded...";
+    juce::String loadImpulseResponse();
+
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
+    juce::dsp::Convolution cab;
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpSimAudioProcessor)
 };
