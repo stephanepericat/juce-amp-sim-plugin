@@ -52,8 +52,11 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
-
+    
+    //==============================================================================
+    juce::AudioProcessorValueTreeState state;
 private:
+    juce::AudioProcessorValueTreeState::ParameterLayout createParams();
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpSimAudioProcessor)
 };

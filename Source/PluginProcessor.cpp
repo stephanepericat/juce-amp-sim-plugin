@@ -19,7 +19,7 @@ AmpSimAudioProcessor::AmpSimAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), state(*this, nullptr, "parameters", createParams())
 #endif
 {
 }
@@ -132,6 +132,9 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    
+    auto v = state.getRawParameterValue("VOLUME");
+    float vol = v->load();
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -153,6 +156,10 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         auto* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
+        for(int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            channelData[sample] *= vol;
+        }
     }
 }
 
@@ -186,4 +193,13 @@ void AmpSimAudioProcessor::setStateInformation (const void* data, int sizeInByte
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AmpSimAudioProcessor();
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::createParams()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", 0.f, 1.f, .5f));
+    
+    return { params.begin(), params.end() };
 }
