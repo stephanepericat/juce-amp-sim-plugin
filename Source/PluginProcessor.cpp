@@ -20,6 +20,10 @@ AmpSimAudioProcessor::AmpSimAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ), state(*this, nullptr, "parameters", createParams())
+                        , lowEQ(juce::dsp::IIR::Coefficients<float>::makeLowShelf(41000, 200.f, .7071f, 1.f))
+                        , midEQ(juce::dsp::IIR::Coefficients<float>::makePeakFilter(41000, 1700.f, .7071f, 1.f))
+                        , hiEQ(juce::dsp::IIR::Coefficients<float>::makeHighShelf(41000, 3500.f, .7071f, 1.f))
+                        , presence(juce::dsp::IIR::Coefficients<float>::makePeakFilter(41000, 3900.f, .7071f, 1.f))
 #endif
 {
     outputVolume.setGainLinear(DEFAULT_VOLUME);
@@ -103,6 +107,20 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     
     cab.prepare(spec);
     outputVolume.prepare(spec);
+    
+//    lowpassFilter.prepare(spec);
+//    lowpassFilter.reset();
+    lowEQ.prepare(spec);
+    lowEQ.reset();
+    
+    midEQ.prepare(spec);
+    midEQ.reset();
+    
+    hiEQ.prepare(spec);
+    hiEQ.reset();
+    
+    presence.prepare(spec);
+    presence.reset();
 }
 
 void AmpSimAudioProcessor::releaseResources()
@@ -154,6 +172,13 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
         buffer.clear (i, 0, buffer.getNumSamples());
     
     juce::dsp::AudioBlock<float> audioBlock = juce::dsp::AudioBlock<float>(buffer);
+    
+    // EQ
+    updateFilter();
+    lowEQ.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    midEQ.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    hiEQ.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    presence.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // Cab Impulse Response
     cab.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
@@ -212,6 +237,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, 1.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, 1.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("HIEQGAIN", "HiEqGain", 0.1f, 10.f, 1.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PRESENCE", "Presence", 0.1f, 10.f, 1.f));
+    
     params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", 0.f, 1.f, DEFAULT_VOLUME));
     
     return { params.begin(), params.end() };
@@ -236,4 +266,25 @@ juce::String AmpSimAudioProcessor::loadImpulseResponse()
     }
     
     return currentIrName;
+}
+
+void AmpSimAudioProcessor::updateFilter()
+{
+    float sampleRate = getSampleRate();
+    
+    auto LEG = state.getRawParameterValue("LOWEQGAIN");
+    float lowEqGainValue = LEG->load();
+    *lowEQ.state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 200.f, .7071f, lowEqGainValue);
+    
+    auto MEG = state.getRawParameterValue("MIDEQGAIN");
+    float midEqGainValue = MEG->load();
+    *midEQ.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 1700.f, .7071f, midEqGainValue);
+    
+    auto HEG = state.getRawParameterValue("HIEQGAIN");
+    float hiEqGainValue = HEG->load();
+    *midEQ.state = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(sampleRate, 3500.f, .7071f, hiEqGainValue);
+    
+    auto PRS = state.getRawParameterValue("PRESENCE");
+    float presenceValue = PRS->load();
+    *presence.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 3900.f, .7071f, presenceValue);
 }

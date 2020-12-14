@@ -28,6 +28,16 @@ private:
     juce::Label irNameLabel;
     juce::TextButton loadIrBtn;
     
+    
+    juce::Slider lowEqGain;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowEqGainbAttachment;
+    juce::Slider midEqGain;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> midEqGainbAttachment;
+    juce::Slider hiEqGain;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hiEqGainbAttachment;
+    juce::Slider presenceGain;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> presenceGainbAttachment;
+    
     juce::Slider volumeKnob;
     juce::Label volumeLabel;
     

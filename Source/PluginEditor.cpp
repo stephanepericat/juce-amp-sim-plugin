@@ -35,6 +35,26 @@ AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
     volumeLabel.setText(volumeKnob.getName(), juce::NotificationType::dontSendNotification);
     volumeLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(volumeLabel);
+    
+    lowEqGain.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    lowEqGain.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    addAndMakeVisible(lowEqGain);
+    lowEqGainbAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "LOWEQGAIN", lowEqGain);
+    
+    midEqGain.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    midEqGain.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    addAndMakeVisible(midEqGain);
+    midEqGainbAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "MIDEQGAIN", midEqGain);
+    
+    hiEqGain.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    hiEqGain.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    addAndMakeVisible(hiEqGain);
+    hiEqGainbAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "HIEQGAIN", hiEqGain);
+    
+    presenceGain.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    presenceGain.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    addAndMakeVisible(presenceGain);
+    presenceGainbAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "PRESENCE", presenceGain);
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -69,4 +89,10 @@ void AmpSimAudioProcessorEditor::resized()
     //Volume
     volumeLabel.setBounds(getWidth() - 150, 10, 140, 40);
     volumeKnob.setBounds(getWidth() - 150, 50, 140, 140);
+    
+    // EQ
+    lowEqGain.setBounds(20, 200, 140, 140);
+    midEqGain.setBounds(180, 200, 140, 140);
+    hiEqGain.setBounds(340, 200, 140, 140);
+    presenceGain.setBounds(500, 200, 140, 140);
 }
