@@ -59,7 +59,7 @@ public:
     juce::AudioProcessorValueTreeState state;
     juce::String currentIrName = "No IR loaded...";
     juce::String loadImpulseResponse();
-    void updateFilter();
+    void updateEQ();
     
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
@@ -67,11 +67,9 @@ private:
     juce::dsp::Convolution cab;
     
     juce::dsp::Gain<float> outputVolume;
-
-    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> lowEQ;
-    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> midEQ;
-    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> hiEQ;
-    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> presence;
+    
+    using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
+    juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpSimAudioProcessor)
