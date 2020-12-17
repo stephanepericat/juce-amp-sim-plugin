@@ -28,6 +28,9 @@ private:
     juce::Label irNameLabel;
     juce::TextButton loadIrBtn;
     
+    juce::Slider gainKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainKnobAttachment;
+    
     
     juce::Slider lowEqGain;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowEqGainbAttachment;
@@ -39,9 +42,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> presenceGainbAttachment;
     
     juce::Slider volumeKnob;
-    juce::Label volumeLabel;
-    
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volumeKnobAttachment;
+    juce::Label volumeLabel;
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     AmpSimAudioProcessor& audioProcessor;

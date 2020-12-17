@@ -101,6 +101,9 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     spec.numChannels = getTotalNumOutputChannels();
     spec.sampleRate = sampleRate;
     
+    inputGain.prepare(spec);
+    gainShaper.prepare(spec);
+    
     cab.prepare(spec);
     outputVolume.prepare(spec);
     
@@ -143,9 +146,6 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    
-    auto v = state.getRawParameterValue("VOLUME");
-    float vol = v->load();
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -158,6 +158,11 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     
     juce::dsp::AudioBlock<float> audioBlock = juce::dsp::AudioBlock<float>(buffer);
     
+    // gain
+    updateInput();
+    inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    gainShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
     // EQ
     updateEQ();
     eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
@@ -166,7 +171,7 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     cab.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // Output Volume
-    outputVolume.setGainLinear(vol);
+    updateVolume();
     outputVolume.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
     // This is the place where you'd normally do the guts of your plugin's
@@ -219,10 +224,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, 1.f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, 1.f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("HIEQGAIN", "HiEqGain", 0.1f, 10.f, 1.f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("PRESENCE", "Presence", 0.1f, 10.f, 1.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", 1.f, 60.f, DEFAULT_GAIN));
+    
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, 5.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, 6.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("HIEQGAIN", "HiEqGain", 0.1f, 10.f, 3.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PRESENCE", "Presence", 0.1f, 10.f, 2.5f));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", 0.f, 1.f, DEFAULT_VOLUME));
     
@@ -269,4 +276,23 @@ void AmpSimAudioProcessor::updateEQ()
     auto PRS = state.getRawParameterValue("PRESENCE");
     float presenceValue = PRS->load();
     *eq.get<3>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 3900.f, .7071f, presenceValue);
+}
+
+void AmpSimAudioProcessor::updateInput()
+{
+    auto IN = state.getRawParameterValue("INPUTGAIN");
+    float val = IN->load();
+    inputGain.setGainDecibels(val);
+}
+
+void AmpSimAudioProcessor::updateVolume()
+{
+    auto VOL = state.getRawParameterValue("VOLUME");
+    float val = VOL->load();
+    outputVolume.setGainLinear(val);
+}
+
+float AmpSimAudioProcessor::asymptoticClipping(float x)
+{
+    return x / (abs(x) + 1);
 }

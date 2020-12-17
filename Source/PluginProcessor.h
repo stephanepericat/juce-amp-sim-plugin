@@ -10,7 +10,8 @@
 
 #include <JuceHeader.h>
 
-#define DEFAULT_VOLUME .25f
+#define DEFAULT_VOLUME .01f
+#define DEFAULT_GAIN 30.f
 
 //==============================================================================
 /**
@@ -58,8 +59,12 @@ public:
     //==============================================================================
     juce::AudioProcessorValueTreeState state;
     juce::String currentIrName = "No IR loaded...";
+    
     juce::String loadImpulseResponse();
     void updateEQ();
+    void updateInput();
+    void updateVolume();
+    static float asymptoticClipping(float x);
     
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
@@ -70,6 +75,10 @@ private:
     
     using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
+    
+    juce::dsp::Gain<float> inputGain;
+//    juce::dsp::WaveShaper<float> gainShaper { juce::dsp::FastMathApproximations::tanh };
+    juce::dsp::WaveShaper<float> gainShaper { asymptoticClipping };
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpSimAudioProcessor)

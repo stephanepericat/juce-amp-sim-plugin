@@ -13,6 +13,13 @@
 AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    gainKnob.setName("Volume");
+    gainKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    gainKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    addAndMakeVisible(gainKnob);
+    
+    gainKnobAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "INPUTGAIN", gainKnob);
+    
     volumeKnob.setName("Volume");
     volumeKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     volumeKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
@@ -85,6 +92,10 @@ void AmpSimAudioProcessorEditor::resized()
     // IR
     loadIrBtn.setBounds(10, 10, 150, 40);
     irNameLabel.setBounds(170, 10, 500, 40);
+    
+    // Gain
+    //Volume
+    gainKnob.setBounds(getWidth() - 310, 50, 140, 140);
     
     //Volume
     volumeLabel.setBounds(getWidth() - 150, 10, 140, 40);
