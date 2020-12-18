@@ -13,7 +13,7 @@
 AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    gainKnob.setName("Volume");
+    gainKnob.setName("Gain");
     gainKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     gainKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
     addAndMakeVisible(gainKnob);
@@ -93,17 +93,16 @@ void AmpSimAudioProcessorEditor::resized()
     loadIrBtn.setBounds(10, 10, 150, 40);
     irNameLabel.setBounds(170, 10, 500, 40);
     
-    // Gain
     //Volume
-    gainKnob.setBounds(getWidth() - 310, 50, 140, 140);
+    volumeLabel.setBounds(getWidth() - 150, 10, 120, 40);
+    volumeKnob.setBounds(getWidth() - 150, 50, 120, 120);
     
-    //Volume
-    volumeLabel.setBounds(getWidth() - 150, 10, 140, 40);
-    volumeKnob.setBounds(getWidth() - 150, 50, 140, 140);
+    // Gain
+    gainKnob.setBounds(20, 160, 120, 120);
     
     // EQ
-    lowEqGain.setBounds(20, 200, 140, 140);
-    midEqGain.setBounds(180, 200, 140, 140);
-    hiEqGain.setBounds(340, 200, 140, 140);
-    presenceGain.setBounds(500, 200, 140, 140);
+    lowEqGain.setBounds(20, 320, 120, 120);
+    midEqGain.setBounds(160, 320, 120, 120);
+    hiEqGain.setBounds(300, 320, 120, 120);
+    presenceGain.setBounds(440, 320, 120, 120);
 }
