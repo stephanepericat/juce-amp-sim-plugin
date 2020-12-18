@@ -13,12 +13,19 @@
 AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    inputKnob.setName("Gain");
+    inputKnob.setName("Input");
     inputKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     inputKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
     addAndMakeVisible(inputKnob);
     
     inputKnobAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "INPUTGAIN", inputKnob);
+    
+    gain1Knob.setName("Gain1");
+    gain1Knob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    gain1Knob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    addAndMakeVisible(gain1Knob);
+    
+    gain1KnobAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "PREGAIN1", gain1Knob);
     
     volumeKnob.setName("Volume");
     volumeKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
@@ -99,6 +106,9 @@ void AmpSimAudioProcessorEditor::resized()
     
     // Input Gain
     inputKnob.setBounds(getWidth() - 310, 50, 120, 120);
+    
+    // Gain
+    gain1Knob.setBounds(20, 160, 120, 120);
     
     // EQ
     lowEqGain.setBounds(20, 320, 120, 120);

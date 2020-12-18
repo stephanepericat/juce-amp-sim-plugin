@@ -78,7 +78,8 @@ private:
     using Gain = juce::dsp::Gain<float>;
     using Shaper = juce::dsp::WaveShaper<float>;
     
-    juce::dsp::ProcessorChain<FilterBand, FilterBand, Gain, Shaper, FilterBand, FilterBand, Gain, Shaper> preamp;
+//    juce::dsp::ProcessorChain<FilterBand, FilterBand, Gain, Shaper, FilterBand, FilterBand, Gain, Shaper> preamp;
+    juce::dsp::ProcessorChain<FilterBand, FilterBand, Gain, Shaper> preamp;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
     
     juce::dsp::Gain<float> inputGain;

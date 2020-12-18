@@ -105,6 +105,8 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     
 //    gainShaper.prepare(spec);
 //    gainShaper.reset();
+    preamp.prepare(spec);
+    preamp.reset();
     
     cab.prepare(spec);
     outputVolume.prepare(spec);
@@ -164,6 +166,10 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     updateInput();
     inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 //    gainShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    // preamp
+    updatePreamp();
+    preamp.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // EQ
     updateEQ();
@@ -228,6 +234,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", 0.1f, 2.f, DEFAULT_GAIN));
     
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PREGAIN1", "PreGain1", 1.f, 20.f, 1.f));
+    
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, DEFAULT_BASS_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, DEFAULT_MID_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("HIEQGAIN", "HiEqGain", 0.1f, 10.f, DEFAULT_TREBLE_EQ));
@@ -262,7 +270,7 @@ juce::String AmpSimAudioProcessor::loadImpulseResponse()
 void AmpSimAudioProcessor::updateEQ()
 {
     float sampleRate = getSampleRate();
-    
+
     auto LEG = state.getRawParameterValue("LOWEQGAIN");
     float lowEqGainValue = LEG->load();
     *eq.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 200.f, .7071f, lowEqGainValue);
@@ -285,6 +293,18 @@ void AmpSimAudioProcessor::updateInput()
     auto IN = state.getRawParameterValue("INPUTGAIN");
     float inputVal = IN->load();
     inputGain.setGainLinear(inputVal);
+}
+
+void AmpSimAudioProcessor::updatePreamp()
+{
+    float sampleRate = getSampleRate();
+    auto G1 = state.getRawParameterValue("PREGAIN1");
+    float gain1Val = G1->load();
+
+    *preamp.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 720.f, .7071f, 0.4f);
+    *preamp.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 320.f, .7071f, 0.5f);
+    preamp.get<2>().setGainDecibels(gain1Val);
+    preamp.get<3>().functionToUse = asymptoticClipping;
 }
 
 void AmpSimAudioProcessor::updateVolume()
