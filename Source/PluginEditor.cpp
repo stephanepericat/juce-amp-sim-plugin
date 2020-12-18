@@ -13,12 +13,12 @@
 AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    gainKnob.setName("Gain");
-    gainKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
-    gainKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
-    addAndMakeVisible(gainKnob);
+    inputKnob.setName("Gain");
+    inputKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    inputKnob.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
+    addAndMakeVisible(inputKnob);
     
-    gainKnobAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "INPUTGAIN", gainKnob);
+    inputKnobAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, "INPUTGAIN", inputKnob);
     
     volumeKnob.setName("Volume");
     volumeKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
@@ -65,7 +65,7 @@ AmpSimAudioProcessorEditor::AmpSimAudioProcessorEditor (AmpSimAudioProcessor& p)
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (1280, 768);
+    setSize (1280, 968);
 }
 
 AmpSimAudioProcessorEditor::~AmpSimAudioProcessorEditor()
@@ -97,8 +97,8 @@ void AmpSimAudioProcessorEditor::resized()
     volumeLabel.setBounds(getWidth() - 150, 10, 120, 40);
     volumeKnob.setBounds(getWidth() - 150, 50, 120, 120);
     
-    // Gain
-    gainKnob.setBounds(20, 160, 120, 120);
+    // Input Gain
+    inputKnob.setBounds(getWidth() - 310, 50, 120, 120);
     
     // EQ
     lowEqGain.setBounds(20, 320, 120, 120);

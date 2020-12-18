@@ -10,12 +10,12 @@
 
 #include <JuceHeader.h>
 
-#define DEFAULT_VOLUME .02f
-#define DEFAULT_GAIN 50.93f
-#define DEFAULT_BASS_EQ 2.79f
-#define DEFAULT_MID_EQ 6.36f
-#define DEFAULT_TREBLE_EQ 3.28f
-#define DEFAULT_PRESENCE 2.04f
+#define DEFAULT_VOLUME .50f
+#define DEFAULT_GAIN 1.25f
+#define DEFAULT_BASS_EQ 3.23f
+#define DEFAULT_MID_EQ 6.47f
+#define DEFAULT_TREBLE_EQ 5.79f
+#define DEFAULT_PRESENCE 2.89f
 
 //==============================================================================
 /**
@@ -67,22 +67,27 @@ public:
     juce::String loadImpulseResponse();
     void updateEQ();
     void updateInput();
+    void updatePreamp();
     void updateVolume();
     static float asymptoticClipping(float x);
     
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
     
-    juce::dsp::Convolution cab;
-    
-    juce::dsp::Gain<float> outputVolume;
-    
     using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
+    using Gain = juce::dsp::Gain<float>;
+    using Shaper = juce::dsp::WaveShaper<float>;
+    
+    juce::dsp::ProcessorChain<FilterBand, FilterBand, Gain, Shaper, FilterBand, FilterBand, Gain, Shaper> preamp;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
     
     juce::dsp::Gain<float> inputGain;
 //    juce::dsp::WaveShaper<float> gainShaper { juce::dsp::FastMathApproximations::tanh };
-    juce::dsp::WaveShaper<float> gainShaper { asymptoticClipping };
+//    juce::dsp::WaveShaper<float> gainShaper { asymptoticClipping };
+
+    juce::dsp::Convolution cab;
+    
+    juce::dsp::Gain<float> outputVolume;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpSimAudioProcessor)

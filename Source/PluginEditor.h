@@ -28,8 +28,8 @@ private:
     juce::Label irNameLabel;
     juce::TextButton loadIrBtn;
     
-    juce::Slider gainKnob;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainKnobAttachment;
+    juce::Slider inputKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputKnobAttachment;
     
     juce::Slider lowEqGain;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowEqGainbAttachment;
