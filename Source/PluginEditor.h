@@ -33,6 +33,8 @@ private:
     
     juce::Slider gain1Knob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gain1KnobAttachment;
+    juce::Slider gain2Knob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gain2KnobAttachment;
 
     
     juce::Slider lowEqGain;
