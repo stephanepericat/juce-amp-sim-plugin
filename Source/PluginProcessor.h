@@ -10,12 +10,12 @@
 
 #include <JuceHeader.h>
 
-#define DEFAULT_VOLUME -2.f
-#define DEFAULT_GAIN 12.f
-#define DEFAULT_BASS_EQ 4.63f
-#define DEFAULT_MID_EQ 2.74f
-#define DEFAULT_TREBLE_EQ 4.07f
-#define DEFAULT_PRESENCE 1.72f
+#define DEFAULT_VOLUME 0.f
+#define DEFAULT_GAIN 0.f
+#define DEFAULT_BASS_EQ 5.f
+#define DEFAULT_MID_EQ 5.f
+#define DEFAULT_TREBLE_EQ 5.f
+#define DEFAULT_PRESENCE 1.5f
 
 //==============================================================================
 /**
@@ -82,7 +82,7 @@ private:
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
     
     Gain inputGain, inputPostGain, outputVolume;
-    Shaper inputShaper { arcTanClipping };
+    Shaper inputShaper { asymptoticClipping };
     Convolution cab;
     
     //==============================================================================

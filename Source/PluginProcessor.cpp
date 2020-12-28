@@ -233,7 +233,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, DEFAULT_BASS_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, DEFAULT_MID_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("HIEQGAIN", "HiEqGain", 0.1f, 10.f, DEFAULT_TREBLE_EQ));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("PRESENCE", "Presence", 0.1f, 10.f, DEFAULT_PRESENCE));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PRESENCE", "Presence", 0.1f, 3.f, DEFAULT_PRESENCE));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", juce::NormalisableRange<float>(-12.f, 12.f, .1f), DEFAULT_VOLUME, "dB"));
     
