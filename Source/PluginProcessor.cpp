@@ -105,14 +105,12 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     
     gainShaper.prepare(spec);
     gainShaper.reset();
-//    preamp.prepare(spec);
-//    preamp.reset();
-    
-    cab.prepare(spec);
-    outputVolume.prepare(spec);
     
     eq.prepare(spec);
     eq.reset();
+    
+    cab.prepare(spec);
+    outputVolume.prepare(spec);
 }
 
 void AmpSimAudioProcessor::releaseResources()
@@ -166,10 +164,6 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     updateInput();
     inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     gainShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    
-    // preamp
-//    updatePreamp();
-//    preamp.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // EQ
     updateEQ();
@@ -232,17 +226,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", 0.1f, 10.f, DEFAULT_GAIN));
-    
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("PREGAIN1", "PreGain1", 1.f, 20.f, 1.f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("PREGAIN2", "PreGain2", 1.f, 35.f, 1.f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", -12.f, 12.f, DEFAULT_GAIN));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, DEFAULT_BASS_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, DEFAULT_MID_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("HIEQGAIN", "HiEqGain", 0.1f, 10.f, DEFAULT_TREBLE_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PRESENCE", "Presence", 0.1f, 10.f, DEFAULT_PRESENCE));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", 0.f, 1.f, DEFAULT_VOLUME));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", -12.f, 12.f, DEFAULT_VOLUME));
     
     return { params.begin(), params.end() };
 }
@@ -293,35 +284,16 @@ void AmpSimAudioProcessor::updateInput()
 {
     auto IN = state.getRawParameterValue("INPUTGAIN");
     float inputVal = IN->load();
-    inputGain.setGainLinear(inputVal);
-}
-
-void AmpSimAudioProcessor::updatePreamp()
-{
-    float sampleRate = getSampleRate();
-    auto G1 = state.getRawParameterValue("PREGAIN1");
-    float gain1Val = G1->load();
-    auto G2 = state.getRawParameterValue("PREGAIN2");
-    float gain2Val = G2->load();
-
-    *preamp.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 720.f, .7071f, 0.4f);
-    *preamp.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 320.f, .7071f, 0.5f);
-    preamp.get<2>().setGainDecibels(gain1Val);
-    preamp.get<3>().functionToUse = asymptoticClipping;
-    *preamp.get<4>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 6.f, .7071f);
-    *preamp.get<5>().state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, 720.f, .7071f, 0.4f);
-    preamp.get<6>().setGainDecibels(gain2Val);
-    preamp.get<7>().functionToUse = asymptoticClipping;
-    preamp.get<8>().setGainLinear(0.25f);
+    
+    // TODO: compensate for gain...
+    inputGain.setGainDecibels(inputVal);
 }
 
 void AmpSimAudioProcessor::updateVolume()
 {
-//    auto IN = state.getRawParameterValue("INPUTGAIN");
-//    float inputVal = IN->load();
     auto VOL = state.getRawParameterValue("VOLUME");
     float val = VOL->load();
-    outputVolume.setGainLinear(val);
+    outputVolume.setGainDecibels(val);
 }
 
 float AmpSimAudioProcessor::asymptoticClipping(float x)
@@ -331,5 +303,6 @@ float AmpSimAudioProcessor::asymptoticClipping(float x)
 
 float AmpSimAudioProcessor::arcTanClipping(float x)
 {
-    return 2.f / juce::MathConstants<float>::pi * juce::dsp::FastMathApproximations::tanh(x);
+    // TODO: see if coef can be dynamic...
+    return 2.f / juce::MathConstants<float>::pi * juce::dsp::FastMathApproximations::tanh(juce::MathConstants<float>::twoPi * x);
 }

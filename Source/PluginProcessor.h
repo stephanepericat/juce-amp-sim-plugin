@@ -10,8 +10,8 @@
 
 #include <JuceHeader.h>
 
-#define DEFAULT_VOLUME .20f
-#define DEFAULT_GAIN 5.86f
+#define DEFAULT_VOLUME 0.f
+#define DEFAULT_GAIN 0.f
 #define DEFAULT_BASS_EQ 4.48f
 #define DEFAULT_MID_EQ 2.90f
 #define DEFAULT_TREBLE_EQ 4.63f
@@ -67,11 +67,9 @@ public:
     juce::String loadImpulseResponse();
     void updateEQ();
     void updateInput();
-    void updatePreamp();
     void updateVolume();
-    static float asymptoticClipping(float x);
-//    static float diodeClipping(float sample);
-    static float arcTanClipping(float x);
+    static float asymptoticClipping(float sample);
+    static float arcTanClipping(float sample);
     
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
@@ -79,20 +77,13 @@ private:
     using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     using Gain = juce::dsp::Gain<float>;
     using Shaper = juce::dsp::WaveShaper<float>;
-    
-//    juce::dsp::ProcessorChain<FilterBand, FilterBand, Gain, Shaper, FilterBand, FilterBand, Gain, Shaper> preamp;
-    juce::dsp::ProcessorChain<FilterBand, FilterBand, Gain, Shaper, FilterBand, FilterBand, Gain, Shaper, Gain> preamp;
+    using Convolution = juce::dsp::Convolution;
+
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
     
-    juce::dsp::Gain<float> inputGain;
-//    juce::dsp::WaveShaper<float> gainShaper { juce::dsp::FastMathApproximations::tanh };
-//    juce::dsp::WaveShaper<float> gainShaper { asymptoticClipping };
-//    juce::dsp::WaveShaper<float> gainShaper { diodeClipping };
-    juce::dsp::WaveShaper<float> gainShaper { arcTanClipping };
-
-    juce::dsp::Convolution cab;
-    
-    juce::dsp::Gain<float> outputVolume;
+    Gain inputGain, outputVolume, postShaperGain;
+    Shaper gainShaper { arcTanClipping };
+    Convolution cab;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AmpSimAudioProcessor)
