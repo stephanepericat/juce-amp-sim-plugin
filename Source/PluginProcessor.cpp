@@ -103,10 +103,10 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     
     inputGain.prepare(spec);
     
-//    gainShaper.prepare(spec);
-//    gainShaper.reset();
-    preamp.prepare(spec);
-    preamp.reset();
+    gainShaper.prepare(spec);
+    gainShaper.reset();
+//    preamp.prepare(spec);
+//    preamp.reset();
     
     cab.prepare(spec);
     outputVolume.prepare(spec);
@@ -165,11 +165,11 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     // gain
     updateInput();
     inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-//    gainShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    gainShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // preamp
-    updatePreamp();
-    preamp.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+//    updatePreamp();
+//    preamp.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // EQ
     updateEQ();
@@ -232,7 +232,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", 0.1f, 2.f, DEFAULT_GAIN));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", 0.1f, 10.f, DEFAULT_GAIN));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PREGAIN1", "PreGain1", 1.f, 20.f, 1.f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PREGAIN2", "PreGain2", 1.f, 35.f, 1.f));
@@ -327,4 +327,9 @@ void AmpSimAudioProcessor::updateVolume()
 float AmpSimAudioProcessor::asymptoticClipping(float x)
 {
     return x / (abs(x) + 1);
+}
+
+float AmpSimAudioProcessor::arcTanClipping(float x)
+{
+    return 2.f / juce::MathConstants<float>::pi * juce::dsp::FastMathApproximations::tanh(x);
 }

@@ -10,12 +10,12 @@
 
 #include <JuceHeader.h>
 
-#define DEFAULT_VOLUME .50f
-#define DEFAULT_GAIN 1.25f
-#define DEFAULT_BASS_EQ 3.23f
-#define DEFAULT_MID_EQ 6.47f
-#define DEFAULT_TREBLE_EQ 5.79f
-#define DEFAULT_PRESENCE 2.89f
+#define DEFAULT_VOLUME .16f
+#define DEFAULT_GAIN 7.57f
+#define DEFAULT_BASS_EQ 3.56f
+#define DEFAULT_MID_EQ 2.72f
+#define DEFAULT_TREBLE_EQ 3.64f
+#define DEFAULT_PRESENCE 1.63f
 
 //==============================================================================
 /**
@@ -70,6 +70,8 @@ public:
     void updatePreamp();
     void updateVolume();
     static float asymptoticClipping(float x);
+//    static float diodeClipping(float sample);
+    static float arcTanClipping(float x);
     
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
@@ -85,6 +87,8 @@ private:
     juce::dsp::Gain<float> inputGain;
 //    juce::dsp::WaveShaper<float> gainShaper { juce::dsp::FastMathApproximations::tanh };
 //    juce::dsp::WaveShaper<float> gainShaper { asymptoticClipping };
+//    juce::dsp::WaveShaper<float> gainShaper { diodeClipping };
+    juce::dsp::WaveShaper<float> gainShaper { arcTanClipping };
 
     juce::dsp::Convolution cab;
     
