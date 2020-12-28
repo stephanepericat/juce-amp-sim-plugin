@@ -10,12 +10,12 @@
 
 #include <JuceHeader.h>
 
-#define DEFAULT_VOLUME .16f
-#define DEFAULT_GAIN 7.57f
-#define DEFAULT_BASS_EQ 3.56f
-#define DEFAULT_MID_EQ 2.72f
-#define DEFAULT_TREBLE_EQ 3.64f
-#define DEFAULT_PRESENCE 1.63f
+#define DEFAULT_VOLUME .20f
+#define DEFAULT_GAIN 5.86f
+#define DEFAULT_BASS_EQ 4.48f
+#define DEFAULT_MID_EQ 2.90f
+#define DEFAULT_TREBLE_EQ 4.63f
+#define DEFAULT_PRESENCE 2.22f
 
 //==============================================================================
 /**
