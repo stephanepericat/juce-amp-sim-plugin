@@ -102,9 +102,10 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     spec.sampleRate = sampleRate;
     
     inputGain.prepare(spec);
+    inputPostGain.prepare(spec);
     
-    gainShaper.prepare(spec);
-    gainShaper.reset();
+    inputShaper.prepare(spec);
+    inputShaper.reset();
     
     eq.prepare(spec);
     eq.reset();
@@ -163,7 +164,8 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     // gain
     updateInput();
     inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    gainShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    inputShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    inputPostGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // EQ
     updateEQ();
@@ -226,14 +228,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", -12.f, 12.f, DEFAULT_GAIN));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", juce::NormalisableRange<float>(-12.f, 12.f, .1f), DEFAULT_GAIN, "dB"));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, DEFAULT_BASS_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, DEFAULT_MID_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("HIEQGAIN", "HiEqGain", 0.1f, 10.f, DEFAULT_TREBLE_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PRESENCE", "Presence", 0.1f, 10.f, DEFAULT_PRESENCE));
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", -12.f, 12.f, DEFAULT_VOLUME));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("VOLUME", "Volume", juce::NormalisableRange<float>(-12.f, 12.f, .1f), DEFAULT_VOLUME, "dB"));
     
     return { params.begin(), params.end() };
 }
@@ -284,9 +286,11 @@ void AmpSimAudioProcessor::updateInput()
 {
     auto IN = state.getRawParameterValue("INPUTGAIN");
     float inputVal = IN->load();
-    
-    // TODO: compensate for gain...
+    float postVal = inputVal > 0.f ? -((2 / juce::MathConstants<float>::pi) * inputVal) : 0.f;
+
     inputGain.setGainDecibels(inputVal);
+    // compensating...
+    inputPostGain.setGainDecibels(postVal);
 }
 
 void AmpSimAudioProcessor::updateVolume()
