@@ -85,12 +85,15 @@ private:
     using Shaper = juce::dsp::WaveShaper<float>;
     using Convolution = juce::dsp::Convolution;
     using Bias = juce::dsp::Bias<float>;
+    using OverSampling = juce::dsp::Oversampling<float>;
 
     juce::dsp::ProcessorChain<Gain, Bias, Shaper, Gain, FilterBand> overdrive;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
     juce::dsp::ProcessorChain<FilterBand, FilterBand> postEq;
     
     Bias preGainBias1;
+    
+    OverSampling overdriveOV { 2, 2, OverSampling::filterHalfBandPolyphaseIIR, true, false };
     
     Gain inputGain, inputPostGain, preGain1, prePostGain1, outputVolume;
 

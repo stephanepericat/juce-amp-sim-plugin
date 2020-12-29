@@ -181,7 +181,13 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     
     // overdrive
     updateOverdrive();
-    overdrive.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    juce::dsp::ProcessContextReplacing<float> overdriveCtx(audioBlock);
+    auto& inputBlock = overdriveCtx.getInputBlock();
+    overdriveOV.processSamplesUp(inputBlock);
+    overdrive.process(overdriveCtx);
+    auto& outputBlock = overdriveCtx.getOutputBlock();
+    outputBlock *= .7f;
+    overdriveOV.processSamplesDown(outputBlock);
     
     // Pre gain 1
 //    updatePreGain();
