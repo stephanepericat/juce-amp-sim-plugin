@@ -10,12 +10,12 @@
 
 #include <JuceHeader.h>
 
-#define DEFAULT_VOLUME 0.f
-#define DEFAULT_GAIN 0.f
-#define DEFAULT_BASS_EQ 5.f
-#define DEFAULT_MID_EQ 5.f
-#define DEFAULT_TREBLE_EQ 5.f
-#define DEFAULT_PRESENCE 1.5f
+#define DEFAULT_VOLUME -7.9f
+#define DEFAULT_GAIN 31.6f
+#define DEFAULT_BASS_EQ 1.45f
+#define DEFAULT_MID_EQ 3.07f
+#define DEFAULT_TREBLE_EQ 4.75f
+#define DEFAULT_PRESENCE 1.33f
 
 //==============================================================================
 /**
@@ -65,11 +65,17 @@ public:
     juce::String currentIrName = "No IR loaded...";
     
     juce::String loadImpulseResponse();
+
     void updateEQ();
     void updateInput();
+    void updateOverdrive();
+    void updatePreGain();
     void updateVolume();
+    
     static float asymptoticClipping(float sample);
     static float arcTanClipping(float sample);
+    static float asymetricClipping(float sample);
+    static float softClipping(float sample);
     
 private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
@@ -78,11 +84,19 @@ private:
     using Gain = juce::dsp::Gain<float>;
     using Shaper = juce::dsp::WaveShaper<float>;
     using Convolution = juce::dsp::Convolution;
+    using Bias = juce::dsp::Bias<float>;
 
+    juce::dsp::ProcessorChain<Gain, Bias, Shaper, Gain, FilterBand> overdrive;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
+    juce::dsp::ProcessorChain<FilterBand, FilterBand> postEq;
     
-    Gain inputGain, inputPostGain, outputVolume;
-    Shaper inputShaper { asymptoticClipping };
+    Bias preGainBias1;
+    
+    Gain inputGain, inputPostGain, preGain1, prePostGain1, outputVolume;
+
+    Shaper inputShaper { arcTanClipping };
+    Shaper preGainShaper1 { arcTanClipping };
+
     Convolution cab;
     
     //==============================================================================

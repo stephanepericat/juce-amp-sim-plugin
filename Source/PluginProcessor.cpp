@@ -107,6 +107,18 @@ void AmpSimAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     inputShaper.prepare(spec);
     inputShaper.reset();
     
+    overdrive.prepare(spec);
+    overdrive.reset();
+    
+//    preGain1.prepare(spec);
+//    prePostGain1.prepare(spec);
+//    
+//    preGainShaper1.prepare(spec);
+//    preGainShaper1.reset();
+    
+//    preGainBias1.prepare(spec);
+//    preGainBias1.reset();
+    
     eq.prepare(spec);
     eq.reset();
     
@@ -161,11 +173,22 @@ void AmpSimAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     
     juce::dsp::AudioBlock<float> audioBlock = juce::dsp::AudioBlock<float>(buffer);
     
-    // gain
-    updateInput();
-    inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    inputShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    inputPostGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    // input
+//    updateInput();
+//    inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+//    inputShaper.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+//    inputPostGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    // overdrive
+    updateOverdrive();
+    overdrive.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    // Pre gain 1
+//    updatePreGain();
+//    preGain1.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+//    preGainBias1.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+//    preGainShaper1.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+//    prePostGain1.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     
     // EQ
     updateEQ();
@@ -228,7 +251,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout AmpSimAudioProcessor::create
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", juce::NormalisableRange<float>(-12.f, 12.f, .1f), DEFAULT_GAIN, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("INPUTGAIN", "InputGain", juce::NormalisableRange<float>(-12.f, 36.f, .1f), DEFAULT_GAIN, "dB"));
+    
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PREGAIN1", "PreGain1", juce::NormalisableRange<float>(0.f, 35.7f, .1f), 0.f, "dB"));
     
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LOWEQGAIN", "LowEqGain", 0.1f, 10.f, DEFAULT_BASS_EQ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("MIDEQGAIN", "MidEqGain", 0.1f, 10.f, DEFAULT_MID_EQ));
@@ -282,6 +307,21 @@ void AmpSimAudioProcessor::updateEQ()
     *eq.get<3>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 3900.f, .7071f, presenceValue);
 }
 
+void AmpSimAudioProcessor::updateOverdrive()
+{
+    float sampleRate = getSampleRate();
+    auto IN = state.getRawParameterValue("INPUTGAIN");
+    float inputValue = IN->load();
+    float postValue = inputValue > 0.f ? -((2 / 3) * inputValue) : 0.f;
+    
+    overdrive.get<0>().setGainDecibels(inputValue);
+    overdrive.get<1>().setBias(.4f);
+    overdrive.get<2>().functionToUse = std::tanh;
+//    overdrive.get<2>().functionToUse = asymptoticClipping;
+    overdrive.get<3>().setGainDecibels(postValue);
+    *overdrive.get<4>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 5.f, .7071f);
+}
+
 void AmpSimAudioProcessor::updateInput()
 {
     auto IN = state.getRawParameterValue("INPUTGAIN");
@@ -291,6 +331,19 @@ void AmpSimAudioProcessor::updateInput()
     inputGain.setGainDecibels(inputVal);
     // compensating...
     inputPostGain.setGainDecibels(postVal);
+}
+
+void AmpSimAudioProcessor::updatePreGain()
+{
+    auto PG1 = state.getRawParameterValue("PREGAIN1");
+    float preGainValue1 = PG1->load();
+    float preGainPostValue1 = preGainValue1 > 0.f ? -((2 / juce::MathConstants<float>::pi) * preGainValue1) : 0.f;
+//    float preGainPostValue1 = preGainValue1 < 18.f ? -(preGainValue1) / 2.f : -9.f;
+    
+    preGain1.setGainDecibels(preGainValue1);
+//    preGainBias1.setBias(0.4f);
+    // compensating...
+    prePostGain1.setGainDecibels(preGainPostValue1);
 }
 
 void AmpSimAudioProcessor::updateVolume()
@@ -309,4 +362,23 @@ float AmpSimAudioProcessor::arcTanClipping(float x)
 {
     // TODO: see if coef can be dynamic...
     return 2.f / juce::MathConstants<float>::pi * juce::dsp::FastMathApproximations::tanh(juce::MathConstants<float>::twoPi * x);
+}
+
+float AmpSimAudioProcessor::asymetricClipping(float sample)
+{
+//    if(sample < -1.f) {
+//        return -0.9818f;
+//    } else if (sample >= -1.f && sample < -0.08905f) {
+    if (sample < -0.08905f) {
+        return (-3 / 4) * (1 - (std::pow((1 - (std::abs(sample) - 0.032857f)), 12)) + (1 / 3) * (std::abs(sample) - 0.032847f)) + 0.01f;
+    } else if (sample >= -0.08905f && sample < 0.320018f) {
+        return (-6.153f * std::pow(sample, 2)) + 3.9375f * sample;
+    } else {
+        return 0.630035f;
+    }
+}
+
+float AmpSimAudioProcessor::softClipping(float sample)
+{
+    return (3 * sample) / 2 * (1 - (std::pow(sample, 2) / 3));
 }
